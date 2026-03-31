@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_project_study_user,Project Study User,model_project_study,group_project_study_user,1,1,1,1
+access_project_study_manager,Project Study Manager,model_project_study,group_project_study_manager,1,1,1,1
+access_study_tags,Study Tags,model_study_tags,group_project_study_user,1,1,1,1

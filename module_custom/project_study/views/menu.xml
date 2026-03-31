@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_project_study_root"
+        name="Project Study"
+        parent="project.menu_main_pm"
+        sequence="10"
+        groups="group_project_study_user,group_project_study_manager"/>
+
+    <menuitem
+        id="menu_project_study_child"
+        name="Study"
+        parent="menu_project_study_root"
+        action="action_project_study"
+        sequence="10"
+        groups="group_project_study_user,group_project_study_manager"/>
+</odoo>
