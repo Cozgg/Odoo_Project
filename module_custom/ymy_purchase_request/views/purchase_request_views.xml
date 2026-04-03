@@ -1,4 +1,129 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <record id="view_purchase_request_list" model="ir.ui.view">
+        <field name="name">purchase.request.list</field>
+        <field name="model">purchase.request</field>
+        <field name="arch" type="xml">
+            <list string="Purchase Requests">
+                <field name="name" decoration-bf="1"/>
+                <field name="requester_id" widget="many2one_avatar_user"/>
+                <field name="department_id"/>
+                <field name="request_date"/>
+                <field name="total_amount" widget="monetary"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'to_approve'"
+                       decoration-primary="state == 'purchasing'"
+                       decoration-success="state in ('approved', 'done')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_purchase_request_form" model="ir.ui.view">
+        <field name="name">purchase.request.form</field>
+        <field name="model">purchase.request</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Request">
+                <header>
+                    <button name="action_submit" type="object" string="Submit" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="state != 'to_approve'" groups="ymy_purchase_request.group_manager"/>
+                    <button name="action_create_po" type="object" string="Create PO" class="oe_highlight" invisible="state != 'approved'"/>
+                    <button name="action_done" type="object" string="Mark as Done" class="oe_highlight" invisible="state != 'purchasing'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state == 'done'"/>
+                    <button name="action_draft" type="object" string="Reset to Draft" invisible="state != 'cancel'"/>
+
+                    <field name="state" widget="statusbar" statusbar_visible="draft,to_approve,approved,purchasing,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_purchase_orders" type="object" class="oe_stat_button" icon="fa-credit-card" invisible="purchase_count == 0">
+                            <field name="purchase_count" widget="statinfo" string="Purchase Orders"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Over Budget" bg_color="text-bg-danger" invisible="not is_over_budget"/>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Mã phiếu..."/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="requester_id" widget="many2one_avatar_user" readonly="state != 'draft'"/>
+                            <field name="department_id" readonly="state != 'draft'"/>
+                            <field name="company_id" groups="base.group_multi_company" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="is_over_budget" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="request_date" readonly="state != 'draft'"/>
+                            <field name="dateline_date" readonly="state != 'draft'"/>
+                            <field name="approved_by" invisible="state in ('draft', 'to_approve')"/>
+                            <field name="approved_date" invisible="state in ('draft', 'to_approve')"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Products" name="products">
+                            <field name="line_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="description"/>
+                                    <field name="qty"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="subtotal"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right" colspan="2" name="request_total">
+                                <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </group>
+                        </page>
+                        <page string="Explanation Note" name="note">
+                            <field name="note" placeholder="Explanation..." readonly="state != 'draft'" class="text-danger fw-bold" invisible="not is_over_budget"/>
+                            <field name="note" placeholder="Explanation..." readonly="state != 'draft'" invisible="is_over_budget"/>
+                        </page>
+                        <page string="Related Purchase Orders" name="related_po" invisible="purchase_count == 0">
+                            <p>Display list of related Purchase Orders</p>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_purchase_request_search" model="ir.ui.view">
+        <field name="name">purchase.request.search</field>
+        <field name="model">purchase.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="requester_id"/>
+                <field name="department_id"/>
+
+                <separator/>
+                <filter string="My Requests" name="my_request" domain="[('requester_id', '=', uid)]"/>
+                <filter string="To Approve" name="to_approve" domain="[('state', '=', 'to_approve')]"/>
+
+                <separator/>
+                <filter string="By Department" name="groupby_department" context="{'group_by': 'department_id'}"/>
+                <filter string="By Status" name="groupby_state" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_purchase_request" model="ir.actions.act_window">
+        <field name="name">Purchase Requests</field>
+        <field name="res_model">purchase.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create new Request Order
+            </p>
+        </field>
+    </record>
 
 </odoo>

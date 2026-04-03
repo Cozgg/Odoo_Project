@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_purchase_request_root" name="Internal Requests" sequence="10"/>
+
+    <menuitem id="menu_purchase_request_main" name="Purchase Requests" parent="menu_purchase_request_root" sequence="1"/>
+
+    <menuitem id="menu_purchase_request_action" name="All Requests" parent="menu_purchase_request_main" action="action_purchase_request" sequence="1"/>
+</odoo>
