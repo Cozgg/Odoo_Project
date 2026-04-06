@@ -165,6 +165,17 @@ class PurchaseRequest(models.Model):
                     }
                 }
 
+    @api.onchange('total_amount')
+    def _onchange_total_amount_warning(self):
+        if self.total_amount > 50000000:
+            return {
+                'warning': {
+                    'title': _("Cảnh báo Vượt ngân sách"),
+                    'message': _(
+                        "Tổng tiền đề nghị đã vượt ngưỡng 50.000.000 đ! Bạn vui lòng ghi chú ggải trình.")
+                }
+            }
+
     def action_view_purchase_orders(self):
         self.ensure_one()
         return {
