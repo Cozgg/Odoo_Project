@@ -132,6 +132,12 @@ msgstr "Tiền tệ"
 #. module: ymy_purchase_request
 #. odoo-python
 #: code:addons/ymy_purchase_request/models/purchase_request.py:0
+msgid "Date Error"
+msgstr "Lỗi ngày tháng"
+
+#. module: ymy_purchase_request
+#. odoo-python
+#: code:addons/ymy_purchase_request/models/purchase_request.py:0
 msgid "Date Warning"
 msgstr "Cảnh báo ngày tháng"
 
@@ -523,6 +529,12 @@ msgstr "Nhà cung cấp dự kiến"
 #: code:addons/ymy_purchase_request/models/purchase_request.py:0
 msgid "The 'Need by Date' cannot be earlier than the Request Date."
 msgstr "'Ngày cần hàng' không được trước Ngày đề nghị."
+
+#. module: ymy_purchase_request
+#. odoo-python
+#: code:addons/ymy_purchase_request/models/purchase_request.py:0
+msgid "The deadline cannot be earlier than the request date. Please select again!"
+msgstr "Hạn chót không được trước ngày đề nghị. Vui lòng chọn lại!"
 
 #. module: ymy_purchase_request
 #. odoo-python

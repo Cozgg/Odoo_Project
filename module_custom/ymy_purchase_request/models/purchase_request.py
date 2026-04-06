@@ -153,15 +153,15 @@ class PurchaseRequest(models.Model):
             if employee:
                 self.department_id = employee.department_id.id
 
-    @api.onchange('dateline_date')
+    @api.onchange('request_date', 'dateline_date')
     def _onchange_dateline_date(self):
         if self.dateline_date and self.request_date:
-            delta = self.dateline_date - self.request_date
-            if delta.days < 3:
+            if self.dateline_date < self.request_date:
+                self.dateline_date = False
                 return {
                     'warning': {
-                        'title': _("Date Warning"),
-                        'message': _("The deadline is very close to the request date.")
+                        'title': _("Date Error"),
+                        'message': _("The deadline cannot be earlier than the request date. Please select again!")
                     }
                 }
 
