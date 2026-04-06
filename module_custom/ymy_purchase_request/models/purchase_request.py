@@ -34,6 +34,7 @@ class PurchaseRequest(models.Model):
     is_over_budget = fields.Boolean(string='Over Budget', compute='_compute_is_over_budget')
     purchase_count = fields.Integer(string='Purchase Count', compute='_compute_purchase_count')
 
+    can_approve = fields.Boolean(compute='_compute_can_approve')
     approved_date = fields.Datetime(string='Approved Date', readonly=True, copy=False)
 
     @api.depends('line_ids.subtotal')
@@ -66,11 +67,13 @@ class PurchaseRequest(models.Model):
 
     def action_create_po(self):
         for record in self:
+            lines_without_vendor = record.line_ids.filtered(lambda l: not l.vendor_id)
+            if lines_without_vendor:
+                missing_products = ", ".join(lines_without_vendor.mapped('product_id.display_name'))
+                raise UserError(_("Please select a suggested vendor for product(s): %s.") % missing_products)
+
             lines_by_vendor = {}
             for line in record.line_ids:
-                if not line.vendor_id:
-                    raise UserError(_("Please select a suggested vendor for product %s.") % line.product_id.display_name)
-
                 if line.vendor_id not in lines_by_vendor:
                     lines_by_vendor[line.vendor_id] = []
                 lines_by_vendor[line.vendor_id].append(line)
@@ -86,11 +89,11 @@ class PurchaseRequest(models.Model):
                         'product_id': line.product_id.id,
                         'name': line.description or line.product_id.name,
                         'product_qty': line.qty,
-                        'product_uom': line.product_uom_id.id,
+                        'product_uom_id': line.product_uom_id.id,
                         'price_unit': line.price_unit,
                         'date_planned': line.need_by_date or record.dateline_date or fields.Datetime.now(),
                     }))
-                self.env['purchase.order'].create(po_vals)
+                self.env['purchase.order'].sudo().create(po_vals)
 
             record.state = 'purchasing'
 
@@ -120,6 +123,16 @@ class PurchaseRequest(models.Model):
             if record.is_over_budget and not record.note:
                 raise ValidationError(_("This request is over budget! Please provide an explanation note."))
 
+    @api.constrains('line_ids')
+    def _check_duplicate_lines(self):
+        for record in self:
+            product_ids = []
+            for line in record.line_ids:
+                if not line.product_id:
+                    continue
+                if line.product_id.id in product_ids:
+                    raise ValidationError(_("Sản phẩm '%s' đã bị trùng lặp! Bạn không thể thêm cùng một sản phẩm nhiều lần trong một phiếu.") % line.product_id.display_name)
+                product_ids.append(line.product_id.id)
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -136,7 +149,7 @@ class PurchaseRequest(models.Model):
     @api.onchange('requester_id')
     def _onchange_requester_id(self):
         if self.requester_id:
-            employee = self.env['hr.employee'].search([('user_id', '=', self.requester_id.id)], limit=1)
+            employee = self.env['hr.employee'].sudo().search([('user_id', '=', self.requester_id.id)], limit=1)
             if employee:
                 self.department_id = employee.department_id.id
 
@@ -163,6 +176,10 @@ class PurchaseRequest(models.Model):
             'context': {'default_request_id': self.id},
         }
 
+    def _compute_can_approve(self):
+        is_manager = self.env.user.has_group('ymy_purchase_request.group_manager')
+        for record in self:
+            record.can_approve = is_manager and record.state == 'to_approve'
 
 class PurchaseRequestLine(models.Model):
     _name = 'purchase.request.line'
@@ -207,7 +224,7 @@ class PurchaseRequestLine(models.Model):
     def _onchange_product_id(self):
         if self.product_id:
             self.description = self.product_id.display_name
-            self.product_uom_id = self.product_id.uom_po_id
+            self.product_uom_id = self.product_id.uom_id
             self.price_unit = self.product_id.standard_price
             self.available_qty = self.product_id.qty_available
 

@@ -26,8 +26,8 @@
         <field name="arch" type="xml">
             <form string="Purchase Request">
                 <header>
-                    <button name="action_submit" type="object" string="Submit" class="oe_highlight" invisible="state != 'draft'"/>
-                    <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="state != 'to_approve'" groups="ymy_purchase_request.group_manager"/>
+                    <button name="action_submit" type="object" string="Submit" class="oe_highlight" invisible="state != 'draft' or not line_ids"/>
+                    <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="not can_approve"/>
                     <button name="action_create_po" type="object" string="Create PO" class="oe_highlight" invisible="state != 'approved'"/>
                     <button name="action_done" type="object" string="Mark as Done" class="oe_highlight" invisible="state != 'purchasing'"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'done'"/>
@@ -75,6 +75,7 @@
                                     <field name="product_uom_id"/>
                                     <field name="price_unit"/>
                                     <field name="subtotal"/>
+                                    <field name="vendor_id"/>
                                 </list>
                             </field>
                             <group class="oe_subtotal_footer oe_right" colspan="2" name="request_total">
@@ -82,8 +83,7 @@
                             </group>
                         </page>
                         <page string="Explanation Note" name="note">
-                            <field name="note" placeholder="Explanation..." readonly="state != 'draft'" class="text-danger fw-bold" invisible="not is_over_budget"/>
-                            <field name="note" placeholder="Explanation..." readonly="state != 'draft'" invisible="is_over_budget"/>
+                            <field name="note" placeholder="Explanation..." readonly="state != 'draft'" class="text-danger fw-bold" required="is_over_budget"/>
                         </page>
                         <page string="Related Purchase Orders" name="related_po" invisible="purchase_count == 0">
                             <p>Display list of related Purchase Orders</p>
